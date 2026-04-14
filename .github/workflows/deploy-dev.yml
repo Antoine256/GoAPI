@@ -4,6 +4,10 @@ on:
   push:
     branches: [develop]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,7 +27,7 @@ jobs:
       - name: Push Docker image
         run: |
           docker push ghcr.io/antoine256/devgoapi:latest
-
+          
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
