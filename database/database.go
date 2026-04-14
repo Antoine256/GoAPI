@@ -3,15 +3,15 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"go.uber.org/zap"
 )
 
 var DB *sql.DB
 
-func Connect() {
+func Connect(logger *zap.Logger) {
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		os.Getenv("DB_HOST"),
@@ -24,18 +24,18 @@ func Connect() {
 	var err error
 	DB, err = sql.Open("pgx", dsn)
 	if err != nil {
-		log.Fatalf("Impossible d'ouvrir la connexion : %v", err)
+		logger.Fatal("Impossible d'ouvrir la connexion : %v", zap.Error(err))
 	}
 
 	if err = DB.Ping(); err != nil {
-		log.Fatalf("Impossible de joindre la base : %v", err)
+		logger.Fatal("Impossible de joindre la base : %v", zap.Error(err))
 	}
 
-	log.Println("Connecté à PostgreSQL")
-	migrate()
+	logger.Info("Connecté à PostgreSQL")
+	migrate(logger)
 }
 
-func migrate() {
+func migrate(logger *zap.Logger) {
 	// Implémentation de la logique de migration (ex: création de tables)
 	queries := []string{
 		`CREATE TABLE IF NOT EXISTS users (
@@ -57,9 +57,10 @@ func migrate() {
 
 	for _, q := range queries {
 		if _, err := DB.Exec(q); err != nil {
-			log.Fatalf("Erreur migration : %v", err)
+			logger.Fatal("Erreur migration : %v", zap.Error(err))
 		}
 	}
 
-	log.Println("Migration effectuée")
+	logger.Info("Migration effectuée")
+
 }

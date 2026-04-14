@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 )
 
 func helloworld(c *gin.Context) {
@@ -18,23 +19,23 @@ func helloworld(c *gin.Context) {
 
 func main() {
 
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Erreur chargement .env")
-	}
-
-	database.Connect()
-
 	logger, err := logger.NewLogger("info")
 	if err != nil {
 		log.Fatalf("Erreur initialisation logger : %v", err)
 	}
 	defer logger.Sync()
 
+	if err := godotenv.Load(); err != nil {
+		logger.Fatal("Erreur chargement .env")
+	}
+
+	database.Connect(logger)
+
 	// Create a Gin router with default middleware (logger and recovery)
 	r := router.SetupRouter(logger)
 
 	// Start server on port 8690
 	if err := r.Run("localhost:8690"); err != nil {
-		log.Fatalf("failed to run server: %v", err)
+		logger.Fatal("failed to run server: %v", zap.Error(err))
 	}
 }
