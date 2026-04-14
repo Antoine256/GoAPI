@@ -13,6 +13,8 @@ FROM alpine:latest
 
 WORKDIR /app
 
+RUN mkdir -p /app/logs && chmod 777 /app/logs
+
 COPY --from=builder /app/api .
 
 EXPOSE 8690
