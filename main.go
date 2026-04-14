@@ -5,18 +5,13 @@ import (
 	"GoAPI/router"
 	logger "GoAPI/utils"
 	"log"
-	"net/http"
 	"os"
-	"time"
+	"strings"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
-
-func helloworld(c *gin.Context) {
-	c.String(http.StatusOK, "Hello World! Time : %s", time.Now().Format(time.RFC3339Nano))
-}
 
 func main() {
 
@@ -37,6 +32,15 @@ func main() {
 
 	// Create a Gin router with default middleware (logger and recovery)
 	r := router.SetupRouter(logger)
+
+	allowedOrigins := strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     allowedOrigins,
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}))
 
 	// Start server on port 8690
 	if err := r.Run("localhost:8690"); err != nil {

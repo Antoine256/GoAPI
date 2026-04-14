@@ -8,6 +8,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func setAuthCookies(c *gin.Context, tokens ressources.TokenResponseDTO) {
+	// Refresh token en cookie httpOnly
+	c.SetCookie(
+		"refresh_token",     // nom
+		tokens.RefreshToken, // valeur
+		7*24*3600,           // durée en secondes (7 jours)
+		"/",                 // path
+		"",                  // domaine
+		false,               // secure (true si en production avec HTTPS)
+		true,                // httpOnly
+	)
+}
+
 func Login(c *gin.Context) {
 	var dto ressources.LoginDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
@@ -19,7 +32,10 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, tokens)
+	setAuthCookies(c, tokens)
+	c.JSON(http.StatusCreated, gin.H{
+		"access_token": tokens.AccessToken,
+	})
 }
 
 func Register(c *gin.Context) {
@@ -33,7 +49,10 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, tokens)
+	setAuthCookies(c, tokens)
+	c.JSON(http.StatusCreated, gin.H{
+		"access_token": tokens.AccessToken,
+	})
 }
 
 func RefreshToken(c *gin.Context) {
@@ -47,7 +66,10 @@ func RefreshToken(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, tokens)
+	setAuthCookies(c, tokens)
+	c.JSON(http.StatusOK, gin.H{
+		"access_token": tokens.AccessToken,
+	})
 }
 
 func Logout(c *gin.Context) {
@@ -60,5 +82,6 @@ func Logout(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "déconnecté avec succès"})
+	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+	c.JSON(http.StatusOK, gin.H{"message": "déconnecté"})
 }

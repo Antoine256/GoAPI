@@ -30,6 +30,7 @@ func SetupRouter(logger *zap.Logger) *gin.Engine {
 	users := api.Group("/users")
 	{
 		users.GET("", handlers.GetUsers)
+		users.GET("/me", handlers.GetCurrentUser)
 		users.GET("/:id", handlers.GetUser)
 		users.POST("", handlers.CreateUser)
 		users.PUT("/:id", handlers.UpdateUser)
