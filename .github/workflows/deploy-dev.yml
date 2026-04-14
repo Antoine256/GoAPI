@@ -25,7 +25,7 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/goapi:dev
+            ghcr.io/antoine256/goapi:dev
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -35,11 +35,6 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            docker pull ghcr.io/${{ github.repository_owner }}/goapi:dev
-            docker stop goapi || true
-            docker rm goapi || true
-            docker run -d \
-              --name goapi \
-              -p 8689:8690 \
-              --restart unless-stopped \
-              ghcr.io/${{ github.repository_owner }}/goapi:dev
+            cd ~/dcompose/GoAPI
+            docker compose pull
+            docker compose up -d
