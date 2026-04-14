@@ -14,14 +14,15 @@ jobs:
 
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+    
+      - name: Build Docker image
+        run: |
+          docker build -t ghcr.io/antoine256/devgoapi:latest \
+             -t ghcr.io/antoine256/devgoapi:${{ github.sha }} .
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/antoine256/goapi:dev
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/antoine256/devgoapi:latest
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
