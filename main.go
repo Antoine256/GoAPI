@@ -6,6 +6,7 @@ import (
 	logger "GoAPI/utils"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +27,10 @@ func main() {
 	defer logger.Sync()
 
 	if err := godotenv.Load(); err != nil {
-		logger.Fatal("Erreur chargement .env")
+		logger.Warn("Impossible de charger le fichier .env")
+		if os.Getenv("DB_HOST") != "" {
+			logger.Info("Variables d'environnement trouvées dans le système")
+		}
 	}
 
 	database.Connect(logger)
