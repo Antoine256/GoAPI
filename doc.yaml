@@ -1,0 +1,132 @@
+# Documentation => https://swagger.io/docs/specification/v3_0/basic-structure/
+#
+# The OpenAPI version defines the overall structure of an API definition
+# title is your API name. description is extended information about your API.
+# version is an arbitrary string that specifies the version of your API
+openapi: 3.0.4
+info:
+  title: Go API
+  description: This is a sample API that uses OpenAPI 3.0.4 specification.
+  version: 0.1.9
+
+# The servers section specifies the API server and base URL
+# You can define one or several servers, such as production and sandbox.
+servers:
+  - url: http://{environment}.example.com/{version}
+    description: API server
+    variables:
+      environment:
+        default: api    # Production server
+        enum:
+          - api         # Production server
+          - api.dev     # Development server
+      version:
+        default: v1    # Default version
+
+# The paths section defines individual endpoints (paths) in your API, 
+# and the HTTP methods (operations) supported by these endpoints.
+paths:
+  /users:
+    get:
+      summary: Returns a list of users.
+      responses:
+        "200": # Response
+          description: OK
+          content: # Response body
+            application/json: # Media type
+              schema: # Must-have
+                type: array # Data type
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    fullTime:
+                      type: boolean
+                  example: # Sample data
+                    id: 1
+                    name: Jessica Right
+                    fullTime: true
+    post:
+      summary: Creates a new user.
+      requestBody:
+        description: User object that needs to be added
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /users/{userId}:
+    get:
+      summary: Returns a list of users.
+      responses:
+        "200": # Response
+          description: OK
+          content: # Response body
+            application/json: # Media type
+              schema: # Must-have
+                type: object # Data type
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  email:
+                    type: string
+                example: # Sample data
+                  id: 1
+                  name: Jessica Right
+                  email: jessica.right@example.com
+    patch:
+      summary: Updates a user.
+      requestBody:
+        description: User object that needs to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      summary: Deletes a user.
+      responses:
+        "204":
+          description: No Content
+
+# Relative URLs to OAuth2 authorization and token URLs
+components:
+  securitySchemes:
+      oauth2:
+        type: oauth2
+        flows:
+          authorizationCode:
+            authorizationUrl: /oauth/dialog
+            tokenUrl: /oauth/token
+  schemas:
+      User: # Object definition
+        type: object
+        properties:
+          id:
+            type: integer
+          name:
+            type: string
+          email:
+            type: string
+          password:
+            type: string
+          
