@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"os"
 
 	"go.uber.org/zap"
@@ -23,8 +24,10 @@ func NewLogger(level string) (*zap.Logger, error) {
 	encoder := zapcore.NewJSONEncoder(encoderConfig)
 
 	// Output fichier
+	var logFile = os.Getenv("LOG_FILE")
+	fmt.Println("Log dans le fichier suivant :", logFile)
 	fileWriter := zapcore.AddSync(&lumberjack.Logger{
-		Filename:   "/app/logs/app.log",
+		Filename:   logFile,
 		MaxSize:    100, // MB
 		MaxBackups: 5,
 		MaxAge:     7, // jours
@@ -40,7 +43,7 @@ func NewLogger(level string) (*zap.Logger, error) {
 
 	core := zapcore.NewCore(encoder, multiWriter, zapLevel)
 
-	logger := zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+	logger := zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.PanicLevel))
 
 	return logger, nil
 }

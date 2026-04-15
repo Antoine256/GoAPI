@@ -8,59 +8,66 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
 var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
-func Login(dto ressources.LoginDTO) (ressources.TokenResponseDTO, error) {
-	// 1. Récupère l'utilisateur par email
+func Login(dto ressources.LoginRequest, logger *zap.Logger) (ressources.TokenResponse, error) {
+	// Récupère l'utilisateur par email
 	user, err := repository.GetUserByEmail(dto.Email)
 	if err != nil {
-		return ressources.TokenResponseDTO{}, errors.New("identifiants invalides")
+		logger.Error("Login - user not found", zap.String("email", dto.Email))
+		return ressources.TokenResponse{}, errors.New("'{incorrect credential': 'email'}")
 	}
 
-	// 2. Vérifie le mot de passe
+	// Vérifie le mot de passe
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(dto.Password)); err != nil {
-		return ressources.TokenResponseDTO{}, errors.New("identifiants invalides")
+		logger.Error("Login - invalid password", zap.String("email", dto.Email))
+		return ressources.TokenResponse{}, errors.New("'{incorrect credential': 'password'}")
 	}
 
-	// 3. Génère les tokens
+	// Génère les tokens
 	accessToken, err := generateAccessToken(user)
 	if err != nil {
-		return ressources.TokenResponseDTO{}, err
+		logger.Error("Login - failed to generate access token", zap.String("email", dto.Email))
+		return ressources.TokenResponse{}, err
 	}
-
 	refreshToken, err := generateRefreshToken(user.ID)
 	if err != nil {
-		return ressources.TokenResponseDTO{}, err
+		logger.Error("Login - failed to generate refresh token", zap.String("email", dto.Email))
+		return ressources.TokenResponse{}, err
 	}
 
-	// 4. Sauvegarde le refresh token en base
+	// Sauvegarde le refresh token en base
 	if err := repository.SaveRefreshToken(user.ID, refreshToken); err != nil {
-		return ressources.TokenResponseDTO{}, err
+		logger.Error("Login - failed to save refresh token", zap.String("email", dto.Email))
+		return ressources.TokenResponse{}, err
 	}
 
-	return ressources.TokenResponseDTO{
+	return ressources.TokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
 }
 
-func Register(dto ressources.RegisterDTO) (ressources.TokenResponseDTO, error) {
-	// 1. Vérifie que l'email n'existe pas déjà
+func Register(dto ressources.RegisterRequest, logger *zap.Logger) (ressources.TokenResponse, error) {
+	// Vérifie que l'email n'existe pas déjà
 	_, err := repository.GetUserByEmail(dto.Email)
 	if err == nil {
-		return ressources.TokenResponseDTO{}, errors.New("email déjà utilisé")
+		logger.Error("Register - email already exists", zap.String("email", dto.Email))
+		return ressources.TokenResponse{}, errors.New("'{incorrect credential': 'email'}")
 	}
 
-	// 2. Hash du mot de passe
+	// Hash du mot de passe
 	hashed, err := bcrypt.GenerateFromPassword([]byte(dto.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return ressources.TokenResponseDTO{}, err
+		logger.Error("Register - failed to hash password", zap.String("email", dto.Email), zap.Error(err))
+		return ressources.TokenResponse{}, err
 	}
 
-	// 3. Crée l'utilisateur
+	// Crée l'utilisateur
 	user, err := repository.CreateUser(ressources.User{
 		Name:     dto.Name,
 		Email:    dto.Email,
@@ -68,59 +75,67 @@ func Register(dto ressources.RegisterDTO) (ressources.TokenResponseDTO, error) {
 		Role:     "user", // rôle par défaut
 	})
 	if err != nil {
-		return ressources.TokenResponseDTO{}, err
+		logger.Error("Register - failed to create user", zap.String("email", dto.Email), zap.Error(err))
+		return ressources.TokenResponse{}, err
 	}
 
-	// 4. Génère les tokens avec les infos du user
+	// Génère les tokens avec les infos du user
 	accessToken, err := generateAccessToken(user)
 	if err != nil {
-		return ressources.TokenResponseDTO{}, err
+		logger.Error("Register - failed to generate access token", zap.String("email", dto.Email), zap.Error(err))
+		return ressources.TokenResponse{}, err
 	}
 	refreshToken, err := generateRefreshToken(user.ID)
 	if err != nil {
-		return ressources.TokenResponseDTO{}, err
+		logger.Error("Register - failed to generate refresh token", zap.String("email", dto.Email), zap.Error(err))
+		return ressources.TokenResponse{}, err
 	}
 
 	if err := repository.SaveRefreshToken(user.ID, refreshToken); err != nil {
-		return ressources.TokenResponseDTO{}, err
+		logger.Error("Register - failed to save refresh token", zap.String("email", dto.Email), zap.Error(err))
+		return ressources.TokenResponse{}, err
 	}
 
-	return ressources.TokenResponseDTO{
+	return ressources.TokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
 }
 
-func RefreshToken(dto ressources.RefreshTokenDTO) (ressources.TokenResponseDTO, error) {
-	// 1. Vérifie et parse le refresh token
-	claims, err := parseToken(dto.RefreshToken)
+func RefreshToken(refreshToken string, logger *zap.Logger) (ressources.TokenResponse, error) {
+	// Vérifie et parse le refresh token
+	claims, err := parseToken(refreshToken)
 	if err != nil {
-		return ressources.TokenResponseDTO{}, errors.New("token invalide")
+		logger.Error("RefreshToken - invalid token", zap.String("refresh_token", refreshToken))
+		return ressources.TokenResponse{}, errors.New("token invalide")
 	}
 
 	userID := int(claims["user_id"].(float64))
 
-	// 2. Vérifie qu'il existe bien en base
-	exists, err := repository.RefreshTokenExists(userID, dto.RefreshToken)
+	// Vérifie qu'il existe bien en base
+	exists, err := repository.RefreshTokenExists(userID, refreshToken)
 	if err != nil || !exists {
-		return ressources.TokenResponseDTO{}, errors.New("token invalide ou expiré")
+		logger.Error("RefreshToken - token not found in database", zap.Int("user_id", userID), zap.String("refresh_token", refreshToken))
+		return ressources.TokenResponse{}, errors.New("token invalide ou expiré")
 	}
 
-	// 3. Récupère les infos de l'utilisateur
+	// Récupère les infos de l'utilisateur
 	user, err := repository.GetUserByID(userID)
 	if err != nil {
-		return ressources.TokenResponseDTO{}, errors.New("utilisateur non trouvé")
+		logger.Error("RefreshToken - user not found", zap.Int("user_id", userID))
+		return ressources.TokenResponse{}, errors.New("utilisateur non trouvé")
 	}
 
-	// 4. Génère un nouvel access token
+	// Génère un nouvel access token
 	accessToken, err := generateAccessToken(user)
 	if err != nil {
-		return ressources.TokenResponseDTO{}, err
+		logger.Error("RefreshToken - failed to generate access token", zap.Int("user_id", userID), zap.Error(err))
+		return ressources.TokenResponse{}, err
 	}
 
-	return ressources.TokenResponseDTO{
+	return ressources.TokenResponse{
 		AccessToken:  accessToken,
-		RefreshToken: dto.RefreshToken, // on réutilise le même
+		RefreshToken: refreshToken, // on réutilise le même
 	}, nil
 }
 

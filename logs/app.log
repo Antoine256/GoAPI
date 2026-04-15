@@ -1,0 +1,6 @@
+{"level":"info","timestamp":"2026-04-15T16:01:55.864+0200","caller":"database/database.go:34","msg":"Connecté à PostgreSQL"}
+{"level":"info","timestamp":"2026-04-15T16:01:55.885+0200","caller":"database/database.go:69","msg":"Migration effectuée"}
+{"level":"info","timestamp":"2026-04-15T16:01:55.885+0200","caller":"router/router.go:20","msg":"Allowed origins for CORS","origins":["http://localhost:5173"]}
+{"level":"info","timestamp":"2026-04-15T16:04:37.842+0200","caller":"database/database.go:34","msg":"Connecté à PostgreSQL"}
+{"level":"info","timestamp":"2026-04-15T16:04:37.864+0200","caller":"database/database.go:69","msg":"Migration effectuée"}
+{"level":"info","timestamp":"2026-04-15T16:04:37.864+0200","caller":"router/router.go:20","msg":"Allowed origins for CORS","origins":["http://localhost:5173"]}

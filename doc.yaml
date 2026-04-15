@@ -12,21 +12,19 @@ info:
 # The servers section specifies the API server and base URL
 # You can define one or several servers, such as production and sandbox.
 servers:
-  - url: http://{environment}.example.com/{version}
+  - url: http://{environment}.example.com/
     description: API server
     variables:
       environment:
         default: api    # Production server
         enum:
           - api         # Production server
-          - api.dev     # Development server
-      version:
-        default: v1    # Default version
+          - dev.api     # Development server
 
 # The paths section defines individual endpoints (paths) in your API, 
 # and the HTTP methods (operations) supported by these endpoints.
 paths:
-  /users:
+  /api/users:
     get:
       summary: Returns a list of users.
       responses:
@@ -37,18 +35,7 @@ paths:
               schema: # Must-have
                 type: array # Data type
                 items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                    name:
-                      type: string
-                    fullTime:
-                      type: boolean
-                  example: # Sample data
-                    id: 1
-                    name: Jessica Right
-                    fullTime: true
+                  $ref: '#/components/schemas/UserResponse'
     post:
       summary: Creates a new user.
       requestBody:
@@ -57,17 +44,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/User'
+              $ref: '#/components/schemas/UserCreateRequest'
       responses:
         "201":
           description: Created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
-  /users/{userId}:
+                $ref: '#/components/schemas/UserResponse'
+  /api/users/me :
     get:
-      summary: Returns a list of users.
+      summary: Returns the current user.
+      responses:
+        "200": # Response
+          description: OK
+          content: # Response body
+            application/json: # Media type
+              schema: # Must-have
+                $ref: '#/components/schemas/UserResponse'
+  /api/users/{userId}:
+    get:
+      summary: Returns a user.
       responses:
         "200": # Response
           description: OK
@@ -82,11 +79,7 @@ paths:
                     type: string
                   email:
                     type: string
-                example: # Sample data
-                  id: 1
-                  name: Jessica Right
-                  email: jessica.right@example.com
-    patch:
+    put:
       summary: Updates a user.
       requestBody:
         description: User object that needs to be updated
@@ -94,16 +87,73 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/User'
+              $ref: '#/components/schemas/UserUpdateRequest'
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/UserResponse'
     delete:
       summary: Deletes a user.
+      responses:
+        "204":
+          description: No Content
+  /auth/login:
+    post:
+      summary: Logs in a user.
+      requestBody:
+        description: Login credentials
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+  /auth/register:
+    post:
+      summary: Registers a new user.
+      requestBody:
+        description: User registration data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+  /auth/refresh:
+    post:
+      summary: Refreshes an access token.
+      requestBody:
+        description: Refresh token
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+  /auth/logout:
+    post:
+      summary: Logs out a user.
       responses:
         "204":
           description: No Content
@@ -118,7 +168,7 @@ components:
             authorizationUrl: /oauth/dialog
             tokenUrl: /oauth/token
   schemas:
-      User: # Object definition
+      UserResponse: # Object definition
         type: object
         properties:
           id:
@@ -127,6 +177,74 @@ components:
             type: string
           email:
             type: string
+          role:
+            type: string
+          created_at:
+            type: string
+          updated_at:
+            type: string
+          arrival_day:
+            type: string
+          arrival_time:
+            type: string
+          departure_day:
+            type: string
+          departure_time:
+            type: string
+      UserCreateRequest:
+        type: object
+        properties:
+          name:
+            type: string
+          email:
+            type: string
           password:
             type: string
-          
+          role:
+            type: string
+      UserUpdateRequest:
+        type: object
+        properties:
+          name:
+            type: string
+          email:
+            type: string
+          password:
+            type: string
+          role:
+            type: string
+          arrival_day:
+            type: string
+          arrival_time:
+            type: string
+          departure_day:
+            type: string
+          departure_time:
+            type: string
+      LoginRequest:
+        type: object
+        properties:
+          email:
+            type: string
+          password:
+            type: string
+      RegisterRequest:
+        type: object
+        properties:
+          name:
+            type: string
+          email:
+            type: string
+          password:
+            type: string
+      TokenResponse:
+        type: object
+        properties:
+          access_token:
+            type: string
+      RefreshTokenRequest:
+        type: object
+        properties:
+          refresh_token:
+            type: string
+        
