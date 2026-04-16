@@ -31,6 +31,13 @@ func SetupRouter(logger *zap.Logger) *gin.Engine {
 	r.Use(middleware.LoggingMiddleware(logger))
 	r.Use(gin.Recovery())
 
+	// Routes ping
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "pong",
+		})
+	})
+
 	// Routes publiques
 
 	authHandler := handlers.NewAuthHandler(logger)

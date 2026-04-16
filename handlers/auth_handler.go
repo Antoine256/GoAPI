@@ -47,7 +47,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 	h.setAuthCookies(c, tokens)
-	h.logger.Info("Login successful", zap.String("email", dto.Email))
+	h.logger.Info("Login successful", zap.String("name", dto.Name))
 	c.JSON(http.StatusCreated, gin.H{
 		"access_token": tokens.AccessToken,
 	})

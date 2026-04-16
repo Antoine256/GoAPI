@@ -5,6 +5,7 @@ import (
 	"GoAPI/ressources"
 	"errors"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -16,54 +17,52 @@ var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
 func Login(dto ressources.LoginRequest, logger *zap.Logger) (ressources.TokenResponse, error) {
 	// Récupère l'utilisateur par email
-	user, err := repository.GetUserByEmail(dto.Email)
+	user, err := repository.GetUserByName(dto.Name)
 	if err != nil {
-		logger.Error("Login - user not found", zap.String("email", dto.Email))
-		return ressources.TokenResponse{}, errors.New("'{incorrect credential': 'email'}")
+		logger.Error("Login - user not found", zap.String("name", dto.Name))
+		return ressources.TokenResponse{}, errors.New("{'incorrect credential': 'name'}")
 	}
 
 	// Vérifie le mot de passe
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(dto.Password)); err != nil {
-		logger.Error("Login - invalid password", zap.String("email", dto.Email))
-		return ressources.TokenResponse{}, errors.New("'{incorrect credential': 'password'}")
+		logger.Error("Login - invalid password", zap.String("name", dto.Name))
+		return ressources.TokenResponse{}, errors.New("{'incorrect credential': 'password'}")
 	}
 
 	// Génère les tokens
-	accessToken, err := generateAccessToken(user)
+	tokens, err := GenerateTokensForUser(user)
 	if err != nil {
-		logger.Error("Login - failed to generate access token", zap.String("email", dto.Email))
-		return ressources.TokenResponse{}, err
-	}
-	refreshToken, err := generateRefreshToken(user.ID)
-	if err != nil {
-		logger.Error("Login - failed to generate refresh token", zap.String("email", dto.Email))
+		logger.Error("Login - failed to generate tokens", zap.String("name", dto.Name), zap.Error(err))
 		return ressources.TokenResponse{}, err
 	}
 
-	// Sauvegarde le refresh token en base
-	if err := repository.SaveRefreshToken(user.ID, refreshToken); err != nil {
-		logger.Error("Login - failed to save refresh token", zap.String("email", dto.Email))
-		return ressources.TokenResponse{}, err
-	}
-
-	return ressources.TokenResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}, nil
+	return tokens, nil
 }
 
 func Register(dto ressources.RegisterRequest, logger *zap.Logger) (ressources.TokenResponse, error) {
-	// Vérifie que l'email n'existe pas déjà
-	_, err := repository.GetUserByEmail(dto.Email)
+
+	// Vérifie qu'il y a un Email (Si email, il faut faire une vérification sinon inutilisable !!!)
+	// if strings.Trim(dto.Email, " ") == "" {
+
+	// } else {
+	// 	_, err := repository.GetUserByEmail(dto.Email)
+	// 	if err == nil {
+	// 		logger.Error("Register - email already exists", zap.String("email", dto.Email))
+	// 		return ressources.TokenResponse{}, errors.New("{'incorrect credential': 'email'}")
+	// 	}
+	// }
+
+	// Vérification de la validité du nom d'utilisateur
+	_, err := repository.GetUserByName(dto.Name)
 	if err == nil {
-		logger.Error("Register - email already exists", zap.String("email", dto.Email))
-		return ressources.TokenResponse{}, errors.New("'{incorrect credential': 'email'}")
+		logger.Error("Register - name already exists", zap.String("name", dto.Name))
+		return ressources.TokenResponse{}, errors.New("{\"incorrect credential\": \"name\"}")
 	}
 
 	// Hash du mot de passe
 	hashed, err := bcrypt.GenerateFromPassword([]byte(dto.Password), bcrypt.DefaultCost)
 	if err != nil {
-		logger.Error("Register - failed to hash password", zap.String("email", dto.Email), zap.Error(err))
+		logger.Error("Register - failed to hash password", zap.String("name", dto.Name), zap.Error(err))
 		return ressources.TokenResponse{}, err
 	}
 
@@ -75,31 +74,18 @@ func Register(dto ressources.RegisterRequest, logger *zap.Logger) (ressources.To
 		Role:     "user", // rôle par défaut
 	})
 	if err != nil {
-		logger.Error("Register - failed to create user", zap.String("email", dto.Email), zap.Error(err))
+		logger.Error("Register - failed to create user", zap.String("name", dto.Name), zap.Error(err))
 		return ressources.TokenResponse{}, err
 	}
 
 	// Génère les tokens avec les infos du user
-	accessToken, err := generateAccessToken(user)
+	tokens, err := GenerateTokensForUser(user)
 	if err != nil {
-		logger.Error("Register - failed to generate access token", zap.String("email", dto.Email), zap.Error(err))
-		return ressources.TokenResponse{}, err
-	}
-	refreshToken, err := generateRefreshToken(user.ID)
-	if err != nil {
-		logger.Error("Register - failed to generate refresh token", zap.String("email", dto.Email), zap.Error(err))
+		logger.Error("Register - failed to generate tokens", zap.String("name", dto.Name), zap.Error(err))
 		return ressources.TokenResponse{}, err
 	}
 
-	if err := repository.SaveRefreshToken(user.ID, refreshToken); err != nil {
-		logger.Error("Register - failed to save refresh token", zap.String("email", dto.Email), zap.Error(err))
-		return ressources.TokenResponse{}, err
-	}
-
-	return ressources.TokenResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}, nil
+	return tokens, nil
 }
 
 func RefreshToken(refreshToken string, logger *zap.Logger) (ressources.TokenResponse, error) {
@@ -164,6 +150,25 @@ func generateRefreshToken(userID int) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
+func GenerateTokensForUser(user ressources.User) (ressources.TokenResponse, error) {
+	accessToken, err := generateAccessToken(user)
+	if err != nil {
+		return ressources.TokenResponse{}, err
+	}
+	refreshToken, err := generateRefreshToken(user.ID)
+	if err != nil {
+		return ressources.TokenResponse{}, err
+	}
+	if err := repository.SaveRefreshToken(user.ID, refreshToken); err != nil {
+		return ressources.TokenResponse{}, err
+	}
+
+	return ressources.TokenResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
+}
+
 func parseToken(tokenStr string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -175,4 +180,13 @@ func parseToken(tokenStr string) (jwt.MapClaims, error) {
 		return nil, errors.New("token invalide")
 	}
 	return token.Claims.(jwt.MapClaims), nil
+}
+
+var emailRegex = regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
+
+func IsValidEmail(email string) bool {
+	if len(email) < 3 || len(email) > 254 {
+		return false
+	}
+	return emailRegex.MatchString(email)
 }

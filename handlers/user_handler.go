@@ -112,11 +112,14 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 
 	// Bind de la requête JSON dans un DTO
 	var dto ressources.UserUpdateRequest
+	h.logger.Info("UpdateUser - received update request", zap.Int("user_id", id), zap.Any("update_fields", c.Request.Body))
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		h.logger.Error("UpdateUser - invalid request", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	h.logger.Info("UpdateUser - received update request", zap.Int("user_id", id), zap.Any("update_fields", dto))
 
 	// Modification de l'utilisateur via le service
 	user, err := services.UpdateUser(id, dto, h.logger)

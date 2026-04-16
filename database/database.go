@@ -40,17 +40,17 @@ func migrate(logger *zap.Logger) {
 	queries := []string{
 		`CREATE TABLE IF NOT EXISTS users (
             id         SERIAL PRIMARY KEY,
-            name       VARCHAR(100) NOT NULL,
+            name       VARCHAR(100) NOT NULL UNIQUE,
             email      VARCHAR(150) NOT NULL UNIQUE,
 			role       VARCHAR(20) NOT NULL DEFAULT 'user',
             password   VARCHAR(255) NOT NULL,
             created_at TIMESTAMP DEFAULT NOW(),
             updated_at TIMESTAMP DEFAULT NOW(),
 			arrival_info BOOLEAN NOT NULL DEFAULT FALSE,
-			arrival_day DATE NOT NULL DEFAULT NOW(),
-			arrival_time TIME NOT NULL DEFAULT '00:00:00',
-			departure_day DATE NOT NULL DEFAULT NOW(),
-			departure_time TIME NOT NULL DEFAULT '00:00:00'
+			arrival_day VARCHAR(20) NOT NULL DEFAULT 'non renseigné',
+			arrival_time VARCHAR(20) NOT NULL DEFAULT 'non renseigné',
+			departure_day VARCHAR(20) NOT NULL DEFAULT 'non renseigné',
+			departure_time VARCHAR(20) NOT NULL DEFAULT 'non renseigné'
         )`,
 		`CREATE TABLE IF NOT EXISTS refresh_tokens (
             id         SERIAL PRIMARY KEY,

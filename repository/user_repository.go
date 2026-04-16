@@ -53,6 +53,18 @@ func GetUserByEmail(email string) (ressources.User, error) {
 	return u, err
 }
 
+func GetUserByName(name string) (ressources.User, error) {
+	var u ressources.User
+	err := database.DB.QueryRow(`
+        SELECT id, name, email, role, password, created_at, updated_at, arrival_day, arrival_time, departure_day, departure_time, arrival_info
+        FROM users WHERE name = $1
+    `, name).Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.Password, &u.CreatedAt, &u.UpdatedAt, &u.ArrivalDay, &u.ArrivalTime, &u.DepartureDay, &u.DepartureTime, &u.ArrivalInfo)
+	if errors.Is(err, sql.ErrNoRows) {
+		return ressources.User{}, errors.New("utilisateur introuvable")
+	}
+	return u, err
+}
+
 func CreateUser(u ressources.User) (ressources.User, error) {
 	// Scan permet de récupérer les champs auto-générés (id, timestamps) après l'insertion
 	err := database.DB.QueryRow(`
@@ -66,10 +78,10 @@ func CreateUser(u ressources.User) (ressources.User, error) {
 func UpdateUser(u ressources.User) (ressources.User, error) {
 	err := database.DB.QueryRow(`
         UPDATE users
-        SET name = $1, email = $2, password = $3, role = $4, updated_at = $5, arrival_day = $6, arrival_time = $7, departure_day = $8, departure_time = $9, arrival_info = $10
-        WHERE id = $11
+        SET name = $1, email = $2, role = $3, updated_at = $4, arrival_day = $5, arrival_time = $6, departure_day = $7, departure_time = $8, arrival_info = $9
+        WHERE id = $10
         RETURNING updated_at
-    `, u.Name, u.Email, u.Password, u.Role, time.Now(), u.ArrivalDay, u.ArrivalTime, u.DepartureDay, u.DepartureTime, u.ArrivalInfo, u.ID).Scan(&u.UpdatedAt)
+    `, u.Name, u.Email, u.Role, time.Now(), u.ArrivalDay, u.ArrivalTime, u.DepartureDay, u.DepartureTime, u.ArrivalInfo, u.ID).Scan(&u.UpdatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return ressources.User{}, errors.New("utilisateur introuvable")
 	}
