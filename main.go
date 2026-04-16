@@ -31,7 +31,7 @@ func main() {
 	r := router.SetupRouter(logger)
 
 	// Start server on port 8690
-	if err := r.Run("localhost:8690"); err != nil {
+	if err := r.Run("0.0.0.0:8690"); err != nil {
 		logger.Fatal("failed to run server: %v", zap.Error(err))
 	}
 }
