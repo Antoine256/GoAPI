@@ -78,7 +78,7 @@ type UserResponse struct {
 	ArrivalInfo   bool      `json:"arrival_info"`
 }
 
-func ToUserResponse(user User) UserResponse {
+func (user User) ToUserResponse() UserResponse {
 	return UserResponse{
 		ID:            user.ID,
 		Name:          user.Name,

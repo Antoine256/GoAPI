@@ -46,7 +46,7 @@ func (h *UserHandler) GetCurrentUser(c *gin.Context) {
 	}
 
 	h.logger.Info("GetCurrentUser - user retrieved successfully", zap.Int("user_id", user.ID))
-	c.JSON(http.StatusOK, ressources.ToUserResponse(user))
+	c.JSON(http.StatusOK, user.ToUserResponse())
 }
 
 func (h *UserHandler) GetUser(c *gin.Context) {
@@ -64,7 +64,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 	}
 
 	h.logger.Info("GetUser - user retrieved successfully", zap.Int("user_id", user.ID))
-	c.JSON(http.StatusOK, ressources.ToUserResponse(user))
+	c.JSON(http.StatusOK, user.ToUserResponse())
 }
 
 func (h *UserHandler) CreateUser(c *gin.Context) {
@@ -87,7 +87,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	}
 
 	h.logger.Info("CreateUser - user created successfully", zap.Int("user_id", user.ID))
-	c.JSON(http.StatusCreated, ressources.ToUserResponse(user))
+	c.JSON(http.StatusCreated, user.ToUserResponse())
 }
 
 func (h *UserHandler) UpdateUser(c *gin.Context) {
@@ -131,7 +131,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	}
 
 	h.logger.Info("UpdateUser - user updated successfully", zap.Int("user_id", user.ID))
-	c.JSON(http.StatusOK, ressources.ToUserResponse(user))
+	c.JSON(http.StatusOK, user.ToUserResponse())
 }
 
 func (h *UserHandler) DeleteUser(c *gin.Context) {

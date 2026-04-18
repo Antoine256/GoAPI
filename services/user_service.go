@@ -8,8 +8,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func GetAllUsers() ([]ressources.User, error) {
-	return repository.GetAllUsers()
+func GetAllUsers() ([]ressources.UserResponse, error) {
+	// on convertit les users en UserResponse pour ne pas exposer les mots de passe
+	users, err := repository.GetAllUsers()
+	if err != nil {
+		return nil, err
+	}
+
+	var userResponses []ressources.UserResponse
+	for _, user := range users {
+		userResponses = append(userResponses, user.ToUserResponse())
+	}
+
+	return userResponses, nil
 }
 
 func GetUserByID(id int, logger *zap.Logger) (ressources.User, error) {
