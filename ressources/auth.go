@@ -1,21 +1,23 @@
 package ressources
 
-type LoginDTO struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
-}
+// DTOs
 
-type RegisterDTO struct {
+// Requests
+
+type LoginRequest struct {
 	Name     string `json:"name" binding:"required"`
-	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=6"`
 }
 
-type TokenResponseDTO struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+type RegisterRequest struct {
+	Name     string `json:"name" binding:"required"`
+	Email    string `json:"email"`
+	Password string `json:"password" binding:"required,min=6"`
 }
 
-type RefreshTokenDTO struct {
-	RefreshToken string `json:"refresh_token" binding:"required"`
+// Responses
+
+type TokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }

@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine AS builder
+FROM golang:1.25.9-alpine AS builder
 
 WORKDIR /app
 
@@ -12,6 +12,8 @@ RUN go build -o api .
 FROM alpine:latest
 
 WORKDIR /app
+
+RUN mkdir -p /app/logs && chmod 777 /app/logs
 
 COPY --from=builder /app/api .
 

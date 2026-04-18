@@ -1,8 +1,8 @@
-name: Build and Deploy Development API
+name: Build and Deploy Production API
 
 on:
   push:
-    branches: [develop]
+    branches: [main]
 
 permissions:
   contents: read
@@ -21,12 +21,12 @@ jobs:
     
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/antoine256/devgoapi:latest \
-             -t ghcr.io/antoine256/devgoapi:${{ github.sha }} .
+          docker build -t ghcr.io/antoine256/goapi:latest \
+             -t ghcr.io/antoine256/goapi:${{ github.sha }} .
 
       - name: Push Docker image
         run: |
-          docker push ghcr.io/antoine256/devgoapi:latest
+          docker push ghcr.io/antoine256/goapi:latest
           
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -36,6 +36,6 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ~/dcompose/GoAPI
+            cd ~/dcompose/goapi
             docker compose pull
             docker compose up -d
