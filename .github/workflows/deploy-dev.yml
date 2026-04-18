@@ -36,6 +36,6 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ~/dcompose/GoAPI
+            cd ~/dcompose/devgoapi
             docker compose pull
             docker compose up -d
