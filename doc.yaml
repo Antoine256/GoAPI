@@ -6,13 +6,13 @@
 openapi: 3.0.4
 info:
   title: Go API
-  description: This is a sample API that uses OpenAPI 3.0.4 specification.
-  version: 0.1.9
+  description: A simple API for managing users.
+  version: 0.1.0
 
 # The servers section specifies the API server and base URL
 # You can define one or several servers, such as production and sandbox.
 servers:
-  - url: http://{environment}.example.com/
+  - url: https://{environment}.petitprojet.com/
     description: API server
     variables:
       environment:
@@ -137,13 +137,6 @@ paths:
   /auth/refresh:
     post:
       summary: Refreshes an access token.
-      requestBody:
-        description: Refresh token
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RefreshTokenRequest'
       responses:
         "200":
           description: OK
@@ -180,9 +173,11 @@ components:
           role:
             type: string
           created_at:
-            type: string
+            type: object
           updated_at:
-            type: string
+            type: object
+          arrival_info:
+            type: boolean
           arrival_day:
             type: string
           arrival_time:
@@ -209,10 +204,10 @@ components:
             type: string
           email:
             type: string
-          password:
-            type: string
           role:
             type: string
+          arrival_info:
+            type: boolean
           arrival_day:
             type: string
           arrival_time:
@@ -224,7 +219,7 @@ components:
       LoginRequest:
         type: object
         properties:
-          email:
+          name:
             type: string
           password:
             type: string
@@ -242,9 +237,3 @@ components:
         properties:
           access_token:
             type: string
-      RefreshTokenRequest:
-        type: object
-        properties:
-          refresh_token:
-            type: string
-        
