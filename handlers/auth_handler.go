@@ -110,25 +110,3 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	h.logger.Info("Logout successful", zap.String("refresh_token", refreshToken))
 	c.JSON(http.StatusOK, gin.H{"message": "déconnecté"})
 }
-
-func (h *AuthHandler) ValidSecretKey(c *gin.Context) {
-	var dto ressources.SecretKeyRequest
-	if err := c.ShouldBindJSON(&dto); err != nil {
-		h.logger.Error("ValidSecretKey - invalid request", zap.Error(err))
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	isValid, err := services.ValidateSecretKey(dto.Key)
-	if err != nil {
-		h.logger.Error("ValidSecretKey - failed to validate secret key", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	if !isValid {
-		h.logger.Warn("ValidSecretKey - invalid secret key", zap.String("secret_key", dto.Key))
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "clé secrète invalide"})
-		return
-	}
-	h.logger.Info("ValidSecretKey - secret key is valid", zap.String("secret_key", dto.Key))
-	c.JSON(http.StatusOK, gin.H{"message": "clé secrète valide"})
-}

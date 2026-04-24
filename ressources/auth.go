@@ -15,10 +15,6 @@ type RegisterRequest struct {
 	Password string `json:"password" binding:"required,min=6"`
 }
 
-type SecretKeyRequest struct {
-	Key string `json:"key" binding:"required"`
-}
-
 // Responses
 
 type TokenResponse struct {

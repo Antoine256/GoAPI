@@ -15,8 +15,6 @@ import (
 func SetupRouter(logger *zap.Logger) *gin.Engine {
 	r := gin.New()
 
-	r.Static("/uploads", "./uploads")
-
 	allowedOrigins := strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
 
 	logger.Info("Allowed origins for CORS", zap.Strings("origins", allowedOrigins))
@@ -67,14 +65,6 @@ func SetupRouter(logger *zap.Logger) *gin.Engine {
 		users.POST("", userHandler.CreateUser)
 		users.PUT("/:id", userHandler.UpdateUser)
 		users.DELETE("/:id", userHandler.DeleteUser)
-	}
-
-	mediaHandler := handlers.NewMediaHandler(logger)
-
-	media := api.Group("/medias")
-	{
-		media.GET("", mediaHandler.GetMedias)
-		media.POST("", mediaHandler.Upload)
 	}
 
 	return r

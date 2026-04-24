@@ -58,18 +58,6 @@ func migrate(logger *zap.Logger) {
             token      TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT NOW()
         )`,
-		`CREATE TABLE IF NOT EXISTS medias (
-			id SERIAL PRIMARY KEY,
-			media_name VARCHAR(255) NOT NULL,
-			media_type VARCHAR(50) NOT NULL,
-			uuid VARCHAR(255) NOT NULL UNIQUE,
-			full_quality_path VARCHAR(255) NOT NULL,
-			thumb_path VARCHAR(255),
-			compress_path VARCHAR(255),
-			size BIGINT,
-			compress_size BIGINT,
-			created_at TIMESTAMP DEFAULT NOW()
-		)`,
 	}
 
 	for _, q := range queries {

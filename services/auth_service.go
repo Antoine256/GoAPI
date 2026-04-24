@@ -129,14 +129,6 @@ func Logout(refreshToken string) error {
 	return repository.DeleteRefreshToken(refreshToken)
 }
 
-func ValidateSecretKey(key string) (bool, error) {
-	expectedKey := os.Getenv("SECRET_KEY")
-	if expectedKey == "" {
-		return false, errors.New("clé secrète non configurée")
-	}
-	return key == expectedKey, nil
-}
-
 // --- Fonctions internes ---
 
 func generateAccessToken(user ressources.User) (string, error) {
