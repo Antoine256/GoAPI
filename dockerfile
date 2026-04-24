@@ -1,5 +1,7 @@
 FROM golang:1.25.9-alpine AS builder
 
+RUN apt-get update && apt-get install -y ffmpeg
+
 WORKDIR /app
 
 COPY go.mod go.sum ./
