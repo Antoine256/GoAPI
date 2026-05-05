@@ -45,12 +45,7 @@ func migrate(logger *zap.Logger) {
 			role       VARCHAR(20) NOT NULL DEFAULT 'user',
             password   VARCHAR(255) NOT NULL,
             created_at TIMESTAMP DEFAULT NOW(),
-            updated_at TIMESTAMP DEFAULT NOW(),
-			arrival_info BOOLEAN NOT NULL DEFAULT FALSE,
-			arrival_day VARCHAR(20) NOT NULL DEFAULT 'non renseigné',
-			arrival_time VARCHAR(20) NOT NULL DEFAULT 'non renseigné',
-			departure_day VARCHAR(20) NOT NULL DEFAULT 'non renseigné',
-			departure_time VARCHAR(20) NOT NULL DEFAULT 'non renseigné'
+            updated_at TIMESTAMP DEFAULT NOW()
         )`,
 		`CREATE TABLE IF NOT EXISTS refresh_tokens (
             id         SERIAL PRIMARY KEY,

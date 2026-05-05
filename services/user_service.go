@@ -58,25 +58,6 @@ func UpdateUser(id int, dto ressources.UserUpdateRequest, logger *zap.Logger) (r
 	if dto.Role != nil {
 		oldUser.Role = *dto.Role
 	}
-	if dto.ArrivalInfo != nil {
-		oldUser.ArrivalInfo = *dto.ArrivalInfo
-	}
-	if dto.ArrivalDay != nil {
-		oldUser.ArrivalDay = *dto.ArrivalDay
-	}
-	if dto.ArrivalTime != nil {
-		oldUser.ArrivalTime = *dto.ArrivalTime
-	}
-	if dto.DepartureDay != nil {
-		oldUser.DepartureDay = *dto.DepartureDay
-	}
-	if dto.DepartureTime != nil {
-		oldUser.DepartureTime = *dto.DepartureTime
-	}
-
-	if dto.ArrivalDay != nil && dto.ArrivalTime != nil && dto.DepartureDay != nil && dto.DepartureTime != nil {
-		oldUser.ArrivalInfo = true
-	}
 
 	logger.Info("UpdateUser - updating user", zap.Int("id", id), zap.Any("updated_fields", dto))
 
