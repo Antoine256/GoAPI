@@ -1,41 +1,41 @@
-# name: Build and Deploy Development API
+name: Build and Deploy Development API
 
-# on:
-#   push:
-#     branches: [develop]
+on:
+  push:
+    branches: [void]
 
-# permissions:
-#   contents: read
-#   packages: write
+permissions:
+  contents: read
+  packages: write
 
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-#     steps:
-#       - name: Checkout
-#         uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-#       - name: Login to GHCR
-#         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
     
-#       - name: Build Docker image
-#         run: |
-#           docker build -t ghcr.io/antoine256/devgoapi:latest \
-#              -t ghcr.io/antoine256/devgoapi:${{ github.sha }} .
+      - name: Build Docker image
+        run: |
+          docker build -t ghcr.io/antoine256/devgoapi:latest \
+             -t ghcr.io/antoine256/devgoapi:${{ github.sha }} .
 
-#       - name: Push Docker image
-#         run: |
-#           docker push ghcr.io/antoine256/devgoapi:latest
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/antoine256/devgoapi:latest
           
-#       - name: Deploy via SSH
-#         uses: appleboy/ssh-action@v1.0.3
-#         with:
-#           host: ${{ secrets.SSH_HOST }}
-#           username: ${{ secrets.SSH_USER }}
-#           port: ${{ secrets.SSH_PORT }}
-#           key: ${{ secrets.SSH_PRIVATE_KEY }}
-#           script: |
-#             cd ~/dcompose/devgoapi
-#             docker compose pull
-#             docker compose up -d
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/dcompose/devgoapi
+            docker compose pull
+            docker compose up -d
